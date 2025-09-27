@@ -160,7 +160,6 @@ class NetworkMetricsAPI(Resource):
         """Generar métricas de red realistas"""
         current_hour = datetime.now().hour
 
-        # Velocidades base según el plan
         plan_speeds = {
             'Básico': {'down': 50, 'up': 25},
             'Premium': {'down': 100, 'up': 50},
@@ -171,7 +170,6 @@ class NetworkMetricsAPI(Resource):
         plan_type = consumption.customer.plan_type
         base_speeds = plan_speeds.get(plan_type, {'down': 100, 'up': 50})
 
-        # Factores de variación según la hora
         if 18 <= current_hour <= 22:  # Hora pico
             speed_factor = random.uniform(0.7, 0.9)
             latency_factor = random.uniform(1.2, 1.8)
@@ -258,7 +256,6 @@ class UsageHistoryAPI(Resource):
         history = []
         base_date = datetime.now().date()
 
-        # Obtener datos actuales para referencia
         consumption = Consumption.query.filter_by(customer_id=customer_id).first()
         daily_avg_data = consumption.data_used_mb / 30 if consumption else 50
         daily_avg_minutes = consumption.minutes_used / 30 if consumption else 5
@@ -266,18 +263,15 @@ class UsageHistoryAPI(Resource):
         for i in range(days):
             date_obj = base_date - timedelta(days=i)
 
-            # Variación según día de la semana
             weekday = date_obj.weekday()
-            if weekday >= 5:  # Fin de semana
+            if weekday >= 5:  
                 usage_factor = random.uniform(1.2, 1.8)
-            else:  # Días laborales
+            else:  
                 usage_factor = random.uniform(0.7, 1.3)
 
-            # Generar uso diario
             daily_data = max(10, daily_avg_data * usage_factor * random.uniform(0.5, 1.5))
             daily_minutes = max(1, int(daily_avg_minutes * usage_factor * random.uniform(0.3, 2.0)))
 
-            # Distribución por horas del día
             peak_hours = self._generate_hourly_distribution(daily_data, daily_minutes)
 
             history.append({
@@ -296,7 +290,6 @@ class UsageHistoryAPI(Resource):
         """Generar distribución de uso por horas del día"""
         peak_hours = []
 
-        # Definir horas pico típicas
         high_usage_hours = [8, 9, 12, 13, 18, 19, 20, 21, 22]
 
         for hour in high_usage_hours:
@@ -311,8 +304,7 @@ class UsageHistoryAPI(Resource):
                     'averageSpeed': round(random.uniform(30, 80), 1)
                 })
 
-        return peak_hours[:5]  # Limitar a 5 horas pico por día
-
+        return peak_hours[:5]  
 
 class BillingCycleAPI(Resource):
     """API para información del ciclo de facturación"""
@@ -343,7 +335,6 @@ class BillingCycleAPI(Resource):
     def _generate_billing_cycle_info(self, customer, consumption):
         """Generar información detallada del ciclo de facturación"""
 
-        # Planes y precios
         plan_prices = {
             'Básico': 25.99,
             'Premium': 45.99,
@@ -353,7 +344,6 @@ class BillingCycleAPI(Resource):
 
         base_price = plan_prices.get(customer.plan_type, 45.99)
 
-        # Calcular cargos adicionales por exceso
         overage_charges = 0
         if consumption.data_usage_percentage > 100:
             excess_mb = consumption.data_used_mb - consumption.data_limit_mb
@@ -363,18 +353,15 @@ class BillingCycleAPI(Resource):
             excess_minutes = consumption.minutes_used - consumption.minutes_limit
             overage_charges += excess_minutes * 0.15  # $0.15 por minuto extra
 
-        # Cargos adicionales aleatorios (servicios, impuestos, etc.)
         additional_services = random.uniform(0, 8.50)
-        taxes = base_price * 0.12  # 12% de impuestos
+        taxes = base_price * 0.12  
 
         total_charges = base_price + overage_charges + additional_services + taxes
 
-        # Fechas del ciclo
         cycle_start = consumption.billing_cycle_start
         cycle_end = consumption.billing_cycle_end
         due_date = cycle_end + timedelta(days=15)
 
-        # Días restantes en el ciclo
         today = date.today()
         days_remaining = (cycle_end - today).days if cycle_end > today else 0
 
@@ -471,13 +458,10 @@ class CustomersListAPI(Resource):
             limit = request.args.get('limit', 10, type=int)
             search = request.args.get('search', '')
 
-            # Limitar límite máximo
             limit = min(limit, 50)
 
-            # Query base
             query = Customer.query
 
-            # Aplicar filtro de búsqueda si existe
             if search:
                 search_filter = f"%{search}%"
                 query = query.filter(
@@ -489,20 +473,16 @@ class CustomersListAPI(Resource):
                     )
                 )
 
-            # Aplicar paginación
             offset = (page - 1) * limit
             customers_query = query.offset(offset).limit(limit)
             customers = customers_query.all()
 
-            # Contar total
             total_customers = query.count()
 
-            # Convertir a dict y agregar información de consumo
             customers_data = []
             for customer in customers:
                 customer_dict = customer.to_dict()
 
-                # Agregar información básica de consumo
                 consumption = Consumption.query.filter_by(customer_id=customer.id).first()
                 if consumption:
                     customer_dict['consumption_summary'] = {
@@ -560,14 +540,11 @@ class BSSystemStatusAPI(Resource):
     def get(self):
         """Obtener estado actual del sistema BSS (compatible con SystemService frontend)"""
         try:
-            # Obtener estado del BSS
             bss_status = self.bss_simulator.check_bss_status()
 
-            # Información adicional del sistema
             db_status = self._check_database_status()
             api_status = self._get_api_status()
 
-            # Formatear respuesta compatible con SystemService
             system_status = {
                 'bss': {
                     'status': bss_status.get('status', 'unknown'),
@@ -610,7 +587,6 @@ class BSSystemStatusAPI(Resource):
     def _check_database_status(self):
         """Verificar estado de la base de datos"""
         try:
-            # Test simple de conexión a la DB
             db.session.execute(db.text('SELECT 1'))
             return {
                 'status': 'healthy',

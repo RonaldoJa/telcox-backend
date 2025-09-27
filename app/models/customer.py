@@ -15,7 +15,6 @@ class Customer(db.Model):
     plan_type = db.Column(db.String(50), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Relación con consumptions
     consumptions = db.relationship('Consumption', backref='customer', lazy=True, cascade='all, delete-orphan')
 
     def __repr__(self):

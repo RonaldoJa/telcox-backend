@@ -50,12 +50,10 @@ class BSSSimulator:
         current_hour = datetime.now().hour
         usage_multiplier = self._get_usage_multiplier(current_hour)
 
-        # Datos base más realistas
         base_data_usage = random.uniform(800, 4200)
         base_minutes_usage = random.randint(60, 420)
         base_balance = random.uniform(8.0, 45.0)
 
-        # Variación temporal
         timestamp_variance = int(time.time()) % 60
         data_variance = timestamp_variance * 12 * usage_multiplier
 
@@ -74,11 +72,11 @@ class BSSSimulator:
 
     def _get_usage_multiplier(self, hour):
         """Calcular multiplicador de uso basado en la hora"""
-        if 9 <= hour <= 17:  # Horas laborales
+        if 9 <= hour <= 17:  
             return 1.3
-        elif 19 <= hour <= 22:  # Horas pico residenciales
+        elif 19 <= hour <= 22:  
             return 1.1
-        elif 0 <= hour <= 6:  # Madrugada
+        elif 0 <= hour <= 6:  
             return 0.3
         else:
             return 0.7
@@ -86,17 +84,15 @@ class BSSSimulator:
     def check_bss_status(self):
         """Verificar estado del sistema BSS con cache"""
         try:
-            # Cache de 30 segundos para evitar checks muy frecuentes
             now = time.time()
             if (self.last_check_time and
                     now - self.last_check_time < 30 and
                     self.cached_status):
                 return self.cached_status
 
-            time.sleep(0.05)  # Simular latencia de red
+            time.sleep(0.05)  
 
-            # Simular fallos ocasionales del BSS
-            if random.random() < 0.02:  # 2% de probabilidad de fallo
+            if random.random() < 0.02: 
                 status = {
                     'status': 'down',
                     'message': 'BSS temporarily unavailable',
@@ -105,7 +101,7 @@ class BSSSimulator:
                     'error_code': 'BSS_CONNECTION_TIMEOUT',
                     'response_time': 'timeout'
                 }
-            elif random.random() < 0.05:  # 5% de probabilidad de degradación
+            elif random.random() < 0.05:  
                 status = {
                     'status': 'degraded',
                     'message': 'BSS experiencing high latency',
@@ -133,7 +129,6 @@ class BSSSimulator:
                     }
                 }
 
-            # Actualizar cache
             self.last_check_time = now
             self.cached_status = status
 
@@ -160,11 +155,10 @@ class BSSSimulator:
             dict: Métricas de calidad de red
         """
         try:
-            time.sleep(0.02)  # Latencia mínima para simular consulta
+            time.sleep(0.02)  
 
             current_hour = datetime.now().hour
 
-            # Simular degradación en horas pico
             if 18 <= current_hour <= 22:
                 latency_base = random.uniform(25, 50)
                 speed_factor = random.uniform(0.6, 0.8)
@@ -222,7 +216,6 @@ class BSSSimulator:
         if not base_data:
             return None
 
-        # Agregar datos en tiempo real
         base_data.update({
             'real_time_usage': {
                 'current_session_mb': round(random.uniform(0.5, 15.0), 2),

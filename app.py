@@ -4,7 +4,6 @@ from datetime import datetime
 import logging
 import os
 
-# Configurar logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -15,13 +14,10 @@ logger = logging.getLogger(__name__)
 def create_complete_app():
     """Crear aplicación completa con todas las configuraciones"""
 
-    # Importar el factory function
     from app import create_app, db
 
-    # Crear la aplicación
     app = create_app()
 
-    # Agregar rutas adicionales
     @app.route('/api/health')
     def health_check():
         """Health check endpoint"""
@@ -74,7 +70,6 @@ def create_complete_app():
             'routes': routes
         })
 
-    # Manejo de errores
     @app.errorhandler(404)
     def not_found(error):
         return jsonify({
@@ -100,11 +95,9 @@ def initialize_database(app, db):
         try:
             logger.info("Inicializando base de datos...")
 
-            # Crear tablas si no existen
             db.create_all()
             logger.info("Tablas creadas correctamente")
 
-            # Verificar si ya hay datos
             from app.models.customer import Customer
             if Customer.query.count() == 0:
                 logger.info("Cargando datos de prueba...")
@@ -123,7 +116,6 @@ def create_test_data(db):
     from app.models.customer import Customer, Consumption
     from datetime import date, timedelta
 
-    # Datos de clientes
     customers_data = [
         {
             'name': 'Juan Carlos Pérez',
@@ -151,23 +143,19 @@ def create_test_data(db):
         }
     ]
 
-    # Crear clientes y consumo
     for i, customer_data in enumerate(customers_data, 1):
         customer = Customer(**customer_data)
         db.session.add(customer)
-        db.session.flush()  # Para obtener el ID
+        db.session.flush()  
 
-        # Crear datos de consumo
         today = date.today()
         cycle_start = today.replace(day=1)
 
-        # Calcular fecha de fin de ciclo
         if cycle_start.month == 12:
             cycle_end = cycle_start.replace(year=cycle_start.year + 1, month=1) - timedelta(days=1)
         else:
             cycle_end = cycle_start.replace(month=cycle_start.month + 1) - timedelta(days=1)
 
-        # Límites según el plan
         plan_limits = {
             'Básico': {'data': 2048, 'minutes': 300},
             'Premium': {'data': 5120, 'minutes': 500},
@@ -195,13 +183,10 @@ def create_test_data(db):
 
 
 if __name__ == '__main__':
-    # Crear aplicación
     app, db = create_complete_app()
 
-    # Inicializar base de datos
     initialize_database(app, db)
 
-    # Mostrar rutas registradas
     with app.app_context():
         print("\n" + "=" * 60)
         print("🚀 TELCOX BACKEND API - RUTAS REGISTRADAS")
@@ -218,7 +203,6 @@ if __name__ == '__main__':
         print(f"🔍 Debug rutas: http://127.0.0.1:5100/debug/routes")
         print("=" * 60)
 
-    # Ejecutar servidor
     app.run(
         host='127.0.0.1',
         port=5100,
